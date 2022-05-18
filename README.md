@@ -32,6 +32,8 @@ Usage of github-artifact-proxy:
     	the filename of the configuration file (required)
   -download-dir string
     	the directory to download artifacts to (required)
+  -github-api-cache-ttl duration
+    	the duration after which cached GitHub API responses are invalidated (default 5m0s)
   -http-addr string
     	the adddress the HTTP server should listen on (required)
   -http-base-path string
