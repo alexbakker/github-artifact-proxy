@@ -1,0 +1,18 @@
+tokens:
+  pat: ghp_your-access-token-here
+targets:
+  menta:
+    # Required: A GitHub API token with at least the "public_repo" scope
+    token: pat
+    # Required: The username of the user who owns the repository
+    owner: alexbakker
+    # Required: The name of the repository
+    repo: menta
+    # Required: The workflow filename
+    filename: build.yaml
+    # Optional: The branch name
+    branch: master
+    # Optional: The event that kicked off the workflow run
+    event: push
+    # Optional: The status with which the workflow run finished
+    status: success

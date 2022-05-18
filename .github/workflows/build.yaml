@@ -1,0 +1,11 @@
+name: build
+on: [pull_request, push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+      - run: |
+          go build github.com/alexbakker/github-artifact-proxy/cmd/github-artifact-proxy
+          ./github-artifact-proxy -h
