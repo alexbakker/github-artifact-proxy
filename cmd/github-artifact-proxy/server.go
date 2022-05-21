@@ -255,7 +255,7 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 		return
 	}
 
-	w.Header().Add("Cache-Control", "no-cache")
+	writeCacheHeaders(w)
 	http.Redirect(w, r, dlPath, http.StatusFound)
 }
 
@@ -302,6 +302,7 @@ func (s *Server) buildURLPath(part string) string {
 func (s *Server) getFileServer(dir string) httprouter.Handle {
 	fs := http.StripPrefix(s.BasePath, http.FileServer(http.Dir(dir)))
 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+		writeCacheHeaders(w)
 		fs.ServeHTTP(w, r)
 	}
 }
@@ -321,4 +322,8 @@ func deleteDir(logCtx *log.Entry, dir string) {
 func httpError(w http.ResponseWriter, status int) {
 	msg := fmt.Sprintf("%d %s", status, strings.ToLower(http.StatusText(status)))
 	http.Error(w, msg, status)
+}
+
+func writeCacheHeaders(w http.ResponseWriter) {
+	w.Header().Add("Cache-Control", "no-cache")
 }
