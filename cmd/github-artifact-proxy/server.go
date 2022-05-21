@@ -301,7 +301,6 @@ func (s *Server) buildURLPath(part string) string {
 func (s *Server) getFileServer(dir string) httprouter.Handle {
 	fs := http.StripPrefix(s.BasePath, http.FileServer(http.Dir(dir)))
 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		fmt.Println(r.URL.Path)
 		fs.ServeHTTP(w, r)
 	}
 }
