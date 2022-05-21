@@ -32,9 +32,14 @@ func extractFile(f *zip.File, destDir string) error {
 	}
 
 	if f.FileInfo().IsDir() {
-		os.MkdirAll(path, f.Mode())
+		if err := os.MkdirAll(path, f.Mode()); err != nil {
+			return err
+		}
 	} else {
-		os.MkdirAll(filepath.Dir(path), f.Mode())
+		if err := os.MkdirAll(filepath.Dir(path), f.Mode()); err != nil {
+			return err
+		}
+
 		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, f.Mode())
 		if err != nil {
 			return err
