@@ -255,6 +255,7 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 		return
 	}
 
+	w.Header().Add("Cache-Control", "no-cache")
 	http.Redirect(w, r, dlPath, http.StatusFound)
 }
 
