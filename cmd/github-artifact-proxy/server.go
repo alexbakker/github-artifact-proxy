@@ -227,19 +227,21 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 	defer zipReader.Close()
 
 	// Before extracting the ZIP file, check if the requested file actually
-	// exists.
-	file, err := zipReader.Open(filename)
-	if err != nil {
-		if os.IsNotExist(err) {
-			logCtx.WithError(err).Warn("unable to open file inside zip")
-			httpError(w, http.StatusNotFound)
-		} else {
-			logCtx.WithError(err).Error("unable to open file inside zip")
-			httpError(w, http.StatusInternalServerError)
+	// exists. Skip this check if we've requested the root directory.
+	if filename != "" {
+		file, err := zipReader.Open(filename)
+		if err != nil {
+			if os.IsNotExist(err) {
+				logCtx.WithError(err).Warn("unable to open file inside zip")
+				httpError(w, http.StatusNotFound)
+			} else {
+				logCtx.WithError(err).Error("unable to open file inside zip")
+				httpError(w, http.StatusInternalServerError)
+			}
+			return
 		}
-		return
+		file.Close()
 	}
-	file.Close()
 
 	if err := os.MkdirAll(dlDir, os.ModePerm); err != nil {
 		logCtx.WithError(err).Error("unable to create directory to unzip the artifact to")
