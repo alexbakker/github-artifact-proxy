@@ -44,7 +44,9 @@ Usage of github-artifact-proxy:
 
 The config file specifies a list of "targets" for which github-artifact-proxy
 will accept requests and serve artifacts. Each target is accessible through:
-``/targets/<target_name>/artifacts/<artifact_name>/<file_name>``.
+``/targets/<target_name>/runs/<run_id>/artifacts/<artifact_name>/<file_name>``.
+
+If you'd like to access to latest artifact for a target, pass "latest" as the ``run_id``.
 
 ```yaml
 tokens:
@@ -59,15 +61,17 @@ targets:
     repo: menta
     # Required: The workflow filename
     filename: build.yaml
-    # Optional: The branch name
-    branch: master
-    # Optional: The event that kicked off the workflow run
-    event: push
-    # Optional: The status with which the workflow run finished
-    status: success
+    # Optional filter to apply when "latest" is passed as the workflow run ID
+    latest_filter:
+      # Optional: The branch name
+      branch: master
+      # Optional: The event that kicked off the workflow run
+      event: push
+      # Optional: The status with which the workflow run finished
+      status: success
 ```
 
 With the configuration of the "menta" target above, one would be able to access
-the "coverage.svg" file contained in the "coverage" artifact in the
+the "coverage.svg" file contained in the latest "coverage" artifact in the
 alexbakker/menta repository with the following URL path:
-``/targets/menta/artifacts/coverage/coverage.svg``.
+``/targets/menta/runs/latest/artifacts/coverage/coverage.svg``.

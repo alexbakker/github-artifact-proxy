@@ -10,9 +10,11 @@ targets:
     repo: menta
     # Required: The workflow filename
     filename: build.yaml
-    # Optional: The branch name
-    branch: master
-    # Optional: The event that kicked off the workflow run
-    event: push
-    # Optional: The status with which the workflow run finished
-    status: success
+    # Optional filter to apply when "latest" is passed as the workflow run ID
+    latest_filter:
+      # Optional: The branch name
+      branch: master
+      # Optional: The event that kicked off the workflow run
+      event: push
+      # Optional: The status with which the workflow run finished
+      status: success

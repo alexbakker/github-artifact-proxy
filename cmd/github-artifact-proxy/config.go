@@ -10,18 +10,27 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Target struct {
-	Token    *string `yaml:"token"`
-	Owner    string  `yaml:"owner"`
-	Repo     string  `yaml:"repo"`
-	Filename string  `yaml:"filename"`
-	Branch   *string `yaml:"branch"`
-	Event    *string `yaml:"event"`
-	Status   *string `yaml:"status"`
+type Run struct {
+	ID        int64
+	Artifact  *github.Artifact
+	FetchTime time.Time
+}
 
-	lockChan           chan struct{}
-	latestArtifact     *github.Artifact
-	latestArtifactTime time.Time
+type LatestFilter struct {
+	Branch *string `yaml:"branch"`
+	Event  *string `yaml:"event"`
+	Status *string `yaml:"status"`
+}
+
+type Target struct {
+	Token        *string       `yaml:"token"`
+	Owner        string        `yaml:"owner"`
+	Repo         string        `yaml:"repo"`
+	Filename     string        `yaml:"filename"`
+	LatestFilter *LatestFilter `yaml:"latest_filter"`
+
+	lockChan chan struct{}
+	runCache map[string]*Run
 }
 
 type Webhook struct {
@@ -62,6 +71,7 @@ func LoadConfig(filename string) (*Config, error) {
 
 	for id, target := range config.Targets {
 		target.lockChan = make(chan struct{}, 1)
+		target.runCache = make(map[string]*Run)
 
 		if target.Token == nil {
 			return nil, fmt.Errorf("target '%s' requires an API token", id)
