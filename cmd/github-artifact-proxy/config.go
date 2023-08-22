@@ -12,7 +12,7 @@ import (
 
 type Run struct {
 	ID        int64
-	Artifact  *github.Artifact
+	Artifacts []*github.Artifact
 	FetchTime time.Time
 }
 

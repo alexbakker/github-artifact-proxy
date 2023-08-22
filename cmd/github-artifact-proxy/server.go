@@ -175,43 +175,38 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 			"amount":   len(afRes.Artifacts),
 		}).Info("retrieved workflow artifacts")
 
-		var artifact *github.Artifact
-		for _, af := range afRes.Artifacts {
-			if af.Name != nil && *af.Name == artifactName {
-				artifact = af
-				break
-			}
-		}
-
-		if artifact == nil || artifact.ID == nil {
-			logCtx.Warn("artifact not found")
-			httpError(w, http.StatusNotFound)
-			return
-		}
-
 		cachedRun = &Run{
 			ID:        *run.ID,
-			Artifact:  artifact,
+			Artifacts: afRes.Artifacts,
 			FetchTime: time.Now(),
 		}
 		target.runCache[runName] = cachedRun
-
-		logCtx.WithFields(log.Fields{
-			"id":         *cachedRun.Artifact.ID,
-			"created_at": cachedRun.Artifact.CreatedAt,
-		}).Info("retrieved latest artifact metadata")
-	} else {
-		logCtx.WithFields(log.Fields{
-			"id":         *cachedRun.Artifact.ID,
-			"created_at": cachedRun.Artifact.CreatedAt,
-		}).Info("using cached artifact metadata")
 	}
 
-	dlDir := s.getArtifactCacheDir(*cachedRun.Artifact.ID)
-	dlPath := s.buildURLPath(fmt.Sprintf("/artifacts/%d/%s", *cachedRun.Artifact.ID, filename))
+	var artifact *github.Artifact
+	for _, af := range cachedRun.Artifacts {
+		if af.Name != nil && *af.Name == artifactName {
+			artifact = af
+			break
+		}
+	}
+
+	if artifact == nil || artifact.ID == nil {
+		logCtx.Warn("artifact not found")
+		httpError(w, http.StatusNotFound)
+		return
+	}
+
+	logCtx.WithFields(log.Fields{
+		"id":         *artifact.ID,
+		"created_at": artifact.CreatedAt,
+	}).Info("found artifact")
+
+	dlDir := s.getArtifactCacheDir(*artifact.ID)
+	dlPath := s.buildURLPath(fmt.Sprintf("/artifacts/%d/%s", *artifact.ID, filename))
 	if _, err := os.Stat(dlDir); err == nil {
 		logCtx.WithFields(log.Fields{
-			"id": *cachedRun.Artifact.ID,
+			"id": *artifact.ID,
 		}).Info("redirecting to cached artifact")
 
 		http.Redirect(w, r, dlPath, http.StatusFound)
@@ -219,10 +214,10 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 	}
 
 	logCtx.WithFields(log.Fields{
-		"id": *cachedRun.Artifact.ID,
+		"id": *artifact.ID,
 	}).Info("downloading artifact")
 
-	url, _, err := client.Actions.DownloadArtifact(r.Context(), target.Owner, target.Repo, *cachedRun.Artifact.ID, true)
+	url, _, err := client.Actions.DownloadArtifact(r.Context(), target.Owner, target.Repo, *artifact.ID, true)
 	if err != nil {
 		logCtx.WithError(err).Error("unable to obtain artifact download url")
 		httpError(w, http.StatusInternalServerError)
@@ -237,7 +232,7 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 	}
 	defer res.Body.Close()
 
-	tempZipFile, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("gh-artifact-%d-*.zip", *cachedRun.Artifact.ID))
+	tempZipFile, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("gh-artifact-%d-*.zip", *artifact.ID))
 	if err != nil {
 		logCtx.WithError(err).Error("unable to create temporary file to download the artifact zip to")
 		httpError(w, http.StatusInternalServerError)
