@@ -8,11 +8,10 @@
       let
         overlay = final: prev: {
           github-artifact-proxy = with final; buildGoModule rec {
-            pname = "github-artifact-proxy";
-            version = "0.0.0";
+            name = "github-artifact-proxy";
             src = ./.;
 
-            vendorSha256 = "sha256-N+di89r5DqNRknBS2EeXAhCASv4y1H/JUUfi1gHrpyI=";
+            vendorSha256 = "sha256-98TYuG82+sx3IxcIbY1/R13uNT3SMEms7uzEB3do864=";
 
             subPackages = [ "cmd/github-artifact-proxy" ];
           };

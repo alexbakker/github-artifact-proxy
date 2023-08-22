@@ -5,7 +5,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-      - run: |
-          go build github.com/alexbakker/github-artifact-proxy/cmd/github-artifact-proxy
-          ./github-artifact-proxy -h
+      - uses: DeterminateSystems/nix-installer-action@3ebd1aebb47f95493b62de6eec0cac3cd74e50a9
+        with:
+          diagnostic-endpoint:
+      - uses: DeterminateSystems/magic-nix-cache-action@749fc5bbc9fa49d60c2b93f6c4bc867b82e1d295
+        with:
+          diagnostic-endpoint:
+      - name: Build
+        run: |
+          nix build --print-build-logs
+          ./result/bin/github-artifact-proxy -h
