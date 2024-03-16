@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v44/github"
+	"github.com/google/go-github/v60/github"
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -28,8 +28,9 @@ type Server struct {
 	*ServerConfig
 	router *httprouter.Router
 
-	m       sync.Mutex
-	clients map[*Target]*github.Client
+	m        sync.Mutex
+	clients  map[*Target]*github.Client
+	dlClient *http.Client
 }
 
 type ServerConfig struct {
@@ -46,6 +47,7 @@ func NewServer(cfg *ServerConfig) *Server {
 	s := Server{
 		ServerConfig: cfg,
 		clients:      make(map[*Target]*github.Client),
+		dlClient:     &http.Client{Timeout: 10 * time.Second},
 	}
 
 	r := httprouter.New()
@@ -206,25 +208,23 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 	dlPath := s.buildURLPath(fmt.Sprintf("/artifacts/%d/%s", *artifact.ID, filename))
 	if _, err := os.Stat(dlDir); err == nil {
 		logCtx.WithFields(log.Fields{
-			"id": *artifact.ID,
+			"redirect_path": "dlPath",
 		}).Info("redirecting to cached artifact")
 
 		http.Redirect(w, r, dlPath, http.StatusFound)
 		return
 	}
 
-	logCtx.WithFields(log.Fields{
-		"id": *artifact.ID,
-	}).Info("downloading artifact")
+	logCtx.Info("preparing artifact download")
 
-	url, _, err := client.Actions.DownloadArtifact(r.Context(), target.Owner, target.Repo, *artifact.ID, true)
+	url, _, err := client.Actions.DownloadArtifact(r.Context(), target.Owner, target.Repo, *artifact.ID, 3)
 	if err != nil {
 		logCtx.WithError(err).Error("unable to obtain artifact download url")
 		httpError(w, http.StatusInternalServerError)
 		return
 	}
 
-	res, err := client.Client().Get(url.String())
+	res, err := s.dlClient.Get(url.String())
 	if err != nil {
 		logCtx.WithError(err).Error("unable to prepare artifact download http request")
 		httpError(w, http.StatusInternalServerError)
@@ -239,6 +239,10 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 		return
 	}
 	defer deleteFile(logCtx, tempZipFile.Name())
+
+	logCtx.WithFields(log.Fields{
+		"temp_zip_filename": tempZipFile.Name(),
+	}).Info("downloading and extracting artifact zip")
 
 	if _, err := io.Copy(tempZipFile, res.Body); err != nil {
 		logCtx.WithError(err).Error("unable to download artifact zip")
@@ -284,6 +288,10 @@ func (s *Server) handleTargetRequest(w http.ResponseWriter, r *http.Request, par
 		deleteDir(logCtx, dlDir)
 		return
 	}
+
+	logCtx.WithFields(log.Fields{
+		"redirect_path": dlPath,
+	}).Info("redirecting to downloaded artifact")
 
 	writeCacheHeaders(w)
 	http.Redirect(w, r, dlPath, http.StatusFound)

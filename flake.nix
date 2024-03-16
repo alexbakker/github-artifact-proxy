@@ -11,7 +11,7 @@
             name = "github-artifact-proxy";
             src = ./.;
 
-            vendorHash = "sha256-98TYuG82+sx3IxcIbY1/R13uNT3SMEms7uzEB3do864=";
+            vendorHash = "sha256-4FvWw/WxFgOeCnA4th7rp09J+xs2xNh3d0MuplJOBW0=";
 
             subPackages = [ "cmd/github-artifact-proxy" ];
           };
@@ -28,6 +28,7 @@
         };
         defaultPackage = packages.github-artifact-proxy;
         devShell = with pkgs; mkShell {
+          hardeningDisable = [ "fortify" ];
           buildInputs = [
             go
           ];

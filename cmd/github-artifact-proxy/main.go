@@ -47,5 +47,7 @@ func main() {
 		DownloadDir:    downloadDir,
 		GithubCacheTTL: ghCacheTTL,
 	})
-	http.ListenAndServe(httpAddr, server)
+	if err := http.ListenAndServe(httpAddr, server); err != nil {
+		log.WithError(err).Fatal("unable to start http server")
+	}
 }

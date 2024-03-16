@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/go-github/v44/github"
+	"github.com/google/go-github/v60/github"
 	"gopkg.in/yaml.v3"
 )
 
