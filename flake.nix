@@ -11,7 +11,7 @@
             name = "github-artifact-proxy";
             src = ./.;
 
-            vendorSha256 = "sha256-98TYuG82+sx3IxcIbY1/R13uNT3SMEms7uzEB3do864=";
+            vendorHash = "sha256-98TYuG82+sx3IxcIbY1/R13uNT3SMEms7uzEB3do864=";
 
             subPackages = [ "cmd/github-artifact-proxy" ];
           };
